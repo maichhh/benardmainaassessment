@@ -1,0 +1,143 @@
+git init git add . git commit -m git branch -M main git remote add origin https: git push -u origin main
+Benard Maina 
+
+-------------------------------------------------------------------------------------------------------------------
+Section 1: API TESTING
+
+
+Test Cases
+
+Test validation points:
+
+1. Request headers: eg Missing, correct and invalid authentication headers
+2. Request methods: whether a response is returned for GET, POST, PUT requests
+2. Response: Status codes, response times, response size
+3. Response body: correct information, correct data types
+
+TC1. Verify status code 200 is returned on a successful transaction. Expected: Should return 200 OK Status code
+TC2. Verify a random user is returned on each successful request. Expected: API should not return the same user in different scenarios.
+TC3. Verify the response time is less that 500ms. Expected: The response time should be less than 500ms
+TC4. Verify the API returns the correct error message with invalid authentication credentials. Expected: 401 Unauthorized status code should be returned.
+TC5. Verify the response body does not contain null or empty values.
+TC6. Verify the value for gender matches the one for title : Expected result: for male gender, the title should be Mr., and for female gender the title should be Mrs.
+TC6. Verify the data types returned in the response. Expected result: age, number, postcode and results should be intergers. The rest (eg gender, city, state) should be Strings
+TC7: Verify sensitive data is not exposed in the response: Expected result: The response should not contain cleartext data on usernames and password.
+TC8: Verify the coordinates and timezone returned match the city and country: Expected result: eg for a city in Denmark, the returned longitude, latitude and timezone should actually match that city.
+TC9. Verify the links returned for pictures are correct and accessible.
+
+Postman script to automate a test case
+
+
+pm.test("Verify the response time is less than 500ms", function () {
+    pm.expect(pm.response.responseTime).to.be.below(500);
+});
+
+Section2: Function to validate email
+------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------
+Section 3: UI TESTING
+
+Functional tests
+TC1. Verify emails with invalid formats are not accepted.
+TC2. Verify user can successfully log in with a valid email and password
+TC3. Verify frontend validation happens for the email field. An inline validation error is displayed for invalid email formats.
+TC4. Verify frontend validation happens for the password field. An inline validation error is displayed for passwords of wrong length and without special characters.
+TC5. Verify the appropriate error message is displayed to the user in case of login failures.
+
+
+Negative test cases
+1. Verify user cannot log in with invalid email and valid password or with valid email and invalid password.
+2. Verify the Login button is disabled in case of invalid email or password of invalid length
+3. Rate limiting: Verify user is locked after several wrong attempts to log in with invalid credentials.
+
+
+Possible bugs
+
+1. User can log in successfully with a combination of valid email and invalid password.
+2. User can log in successfully with a combination of valid password and invalid email
+3. The login button is activated even when the email format is wrong and password length is invalid.
+4. A user can attempt indefinite number of wrong login attempts without being locked out. (risk of password bruteforce attacks)
+5. Wrong error messages are shown in case of login with wrong credentials. 
+6. The user is not logged in successfully when they provide correct email and password.
+
+
+How to automate
+Description: Use Page Object Model to separate test data and page objects from the tests. This will make the automation tests easier to maintain.
+
+
+1. Create a Class named LoginPage in file loginpage.js
+2. In class LoginPage get the locators for email field, password field and login button and save them as constants.
+3. Create a login function that takes an email and password as parameters.
+4. Given the email and password parameters, the function should pass them to the email and password fields respectively.
+5. The function should then perform a click() action on the login button by referencing the login button locator above.
+
+6. Create a separate test file which will import the LoginPage above.
+7. Create one test that uses valid email and password eg. loginPage.login("validemail@gmail.com","valid password"). Add an assertion that verifies the user is logged in successfully.
+8. Create one test that uses invalid email and password eg. loginPage.login("invalidemail@gmail.com","invalid password"). Add an assertion that verifies the correct error message is returned to the user.
+
+Comment: This model will make the test files lightweight and easy to maintain. In case a locator changes, the change can be made centrally on the separate LoginPage class.
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+Section 4: Bug Report
+
+[BUG ID:4444][UAT Environment][SIT][Chrome Browser][Login Page]: When a user enters correct email and password, clicking login does nothing
+[Assigned to: Frontend Developer]
+Severity: Critical
+Priority: High
+
+
+Repro Steps
+1. Navigate to the login page on Chrome browser
+2. On the login page enter the correct email(benardtest@gmail.com)
+3. Enter the correct password (Password@%234)
+4. Click on the login button
+5. View the result
+
+Actual results
+Nothing happens when the login button is clicked and user is not navigated from the login page.
+
+Expected result
+User should be navigated from the login page after providing correct login credentials
+
+Test data used
+Email: benardtest@gmail.com
+Password: Password@%234
+
+
+Logs
+View attached [Video] and [Network logs]
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+Section 4: SIT question
+
+Approach to identifying the root cause: Use the '5 Whys' model. Ask why 5 times until you get to the root cause. For example:
+Q1. Why are there mismatches in the daily reconciliation report?
+Ans1: Because some transactions are present in the core banking system but absent in the reconciliation system.
+Q2: Why are some transactions are present in the core banking system but absent in the reconciliation system?
+Ans2: There were timeouts when they were being pulled from the core banking system.
+Q3: Why were there timeouts when fetching the transactions from core banking system?
+Ans3....
+
+By doing this iteratively, where the answer to one question becomes the question to the next one, we will get to the root cause of the issue.
+
+
+SPECIFIC CHECKS
+1. Identify the mismatched transactions and check their details in the reconciliation DB.
+2. If the transactions are not present in the reconciliation DB but present in the core banking system,check specific logs of when those transactions were being pulled from the core banking system for any invalid DB queries, DB connection timeouts or other errors and have them fixed.
+3. If transactions are present in both databases, check how the mismatched transactions are captured in the reconciliation DB, and verify all the fields are captured correctly (eg transaction dates match those in the core banking system, formats and precision of transaction amounts in both DBs)
+(reconciliation system uses dates to reconcile and the mismatch could be due to differing dates with the core banking system)
+4. Investigate the patterns of the mismatched transactions. eg certain transaction types not being pushed to the reconciliation system/DB
+
+
+
+-----------------------------------------------------------------------------------------------------------------
